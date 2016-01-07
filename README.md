@@ -1,6 +1,6 @@
 # EF-CI
 
-ef-ci.pl is Perl script that checks continuously for any change in a project directory structure (like the [DSL-SLurper](http://github.com/electric-cloud/DSL-slurper)) and save the modified file as the command of a step.
+ef-ci.pl is Perl script that checks continuously for any change in a project directory structure (like the [DSL-slurper](http://github.com/electric-cloud/DSL-slurper)) and save the modified file as the command of a step.
 The path to the step files indicates to the system in which exact location to save this command.
 If if detect some *.ntest files, it will also run [ec-testing](http://github.com/electric-cloud/ec-testing)::ntest
 
