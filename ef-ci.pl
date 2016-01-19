@@ -33,7 +33,7 @@ my $osIsWindows = $^O =~ /MSWin/;
 my $version = "0.2";
 my $tsFile = ".efci";          # filename where the timestamp is saved
 my $DEBUG=1;
-my $server="ecmaster";         # Default server name
+my $server="localhost";         # Default server name
 my $user="admin";              # default user name
 my $password="changeme";       # Default password
 my $efciDir=".";               # Default directory where to pick up code
@@ -47,7 +47,7 @@ my $errorColor='red';
 my $okColor='green';
 
 # Create a single instance of the Perl access to ElectricCommander
-my $ec = new ElectricCommander({server=>$server, format => "json"});
+my $ec = undef;
 
 #############################################################################
 # invokeCommander
@@ -140,12 +140,12 @@ sub processDirectory {
     next if ($mtime <= $timestamp);
 
     my $path="$dir/$filename";
-    if ($filename =~ /.pl$/) {
+    if ($filename =~ /.(pl|sh)$/) {
       my ($project, $nothing, $procedure, $file) = ($path =~
         m#([^/]+)(/src/project)?/procedures/([^/]+)/steps/(.+)$#);
       # step name is name of command minus extension
       my ($step) = ($file =~ m/([^\.]+)\./);
-
+      next if (($step eq "") );
       printf ("%s %s\n", colored($indent,$plusColor), $dir);
       printf("  %s %s", "  "x $level, $filename);
       #printf("\npath: $path\n");
@@ -166,6 +166,27 @@ sub processDirectory {
       }
     } elsif ($filename =~ /.ntest$/) {
         system("$ntest --testout=/tmp/ --target=$server $dir/$filename");
+    } elsif ($filename =~ /help.xml$/) {
+      my ($project) = ($path =~ m#([^/]+)/src/pages/help.xml$#);
+      # step name is name of command minus extension
+      next if (($project eq "") );
+      printf ("%s %s\n", colored($indent,$plusColor), $dir);
+      printf("  %s %s", "  "x $level, $filename);
+      #printf("\npath: $path\n");
+      #printf("\tpj: $project, pc: $procedure, s: $step, f: $file");
+      my($ok, $json, $errMsg, $errCode)=
+        invokeCommander("SuppressLog IgnoreError",
+            'setProperty', 'help', {
+               projectName => $project,
+               valueFile => $path
+             }
+      );
+      if ($ok) {
+         printf (" (%s)\n", colored("OK", $okColor));
+      } else {
+         printf("\n%s\n", colored($errMsg, $errorColor));
+      }
+
     }
   }
   closedir $dh;
@@ -208,6 +229,9 @@ GetOptions(
   'test=s'      => \$ntest,
   'force'       => \$force,
   'help'        => \&usage) || usage();
+
+# Create a single instance of the Perl access to ElectricCommander
+$ec = new ElectricCommander({server=>$server, format => "json"});
 
 login();
 
