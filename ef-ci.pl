@@ -102,15 +102,6 @@ sub invokeCommander {
     return ($success, $result, $errMsg, $errCode);
 }
 
-#############################################################################
-# login
-#   initiate a login session with commander server
-# Args:
-#     None
-#############################################################################
-sub login {
-  $ec->login($user, $password);
-}
 
 #############################################################################
 # processDirectory
@@ -140,7 +131,7 @@ sub processDirectory {
     next if ($mtime <= $timestamp);
 
     my $path="$dir/$filename";
-    if ($filename =~ /.(pl|sh)$/) {
+    if ($filename =~ /.(pl|sh|ps1)$/) {
       my ($project, $nothing, $procedure, $file) = ($path =~
         m#([^/]+)(/src/project)?/procedures/([^/]+)/steps/(.+)$#);
       # step name is name of command minus extension
@@ -232,8 +223,9 @@ GetOptions(
 
 # Create a single instance of the Perl access to ElectricCommander
 $ec = new ElectricCommander({server=>$server, format => "json"});
+$ec->login($user, $password);
 
-login();
+$efciDir =~ s/\/$//;    # remove th last /
 
 # Reset existing timestamp if  in FORCE mode
 if ($force || ! -f "$efciDir/$tsFile") {
