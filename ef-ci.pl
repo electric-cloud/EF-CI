@@ -135,7 +135,7 @@ sub processDirectory {
       my ($project, $nothing, $procedure, $file) = ($path =~
         m#([^/]+)(/src/project)?/procedures/([^/]+)/steps/(.+)$#);
       # step name is name of command minus extension
-      my ($step) = ($file =~ m/([^\.]+)\./);
+      my ($step) = ($file =~ m/(.+)\.[^\.]+$/);
       next if (($step eq "") );
       printf ("%s %s\n", colored($indent,$plusColor), $dir);
       printf("  %s %s", "  "x $level, $filename);
@@ -177,7 +177,24 @@ sub processDirectory {
       } else {
          printf("\n%s\n", colored($errMsg, $errorColor));
       }
-
+    } elsif ($filename =~ /form.xml$/) {
+      my ($project, $nothing, $procedure) = ($path =~
+        m#([^/]+)(/src/project)?/procedures/([^/]+)/form.xml$#);
+      printf ("%s %s\n", colored($indent,$plusColor), $dir);
+      printf("  %s %s", "  "x $level, $filename);
+      my($ok, $json, $errMsg, $errCode)=
+        invokeCommander("SuppressLog IgnoreError",
+            'setProperty', 'ec_parameterForm', {
+               projectName => $project,
+               procedureName => $procedure,
+               valueFile => $path
+             }
+      );
+      if ($ok) {
+         printf (" (%s)\n", colored("OK", $okColor));
+      } else {
+         printf("\n%s\n", colored($errMsg, $errorColor));
+      }
     }
   }
   closedir $dh;
